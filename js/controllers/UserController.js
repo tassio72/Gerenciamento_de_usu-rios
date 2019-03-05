@@ -87,9 +87,17 @@ class UserController {
         O mesmo serve para atribuir um novo atributo para o JSON, conforme veremos
         */
 
+        let isValid = true; //para auxiliar na validação do formulário
+
         //elemets do formId são todos os elementos HTML. Como São elemetos do HTML, e estes não tem forEach, vamos usar o spread operator
         [...this.formEl.elements].forEach((field, index) => {
     
+            if (["name", "email", "password"].indexOf(field.name) > -1 && !field.value) { //validando os campos obrigatório
+                field.parentElement.classList.add("has-error"); //adicionando oo pai do elemento field, via parentElement, a class has-error
+                isValid = false;
+            }
+
+
             if (field.name == "gender") {//para a perguntado tipo radio, pegaremos apenas o que for selecionado (checked) pelo usuário
             
                 if (field.checked) { //checked é uma propriedade
@@ -114,6 +122,9 @@ class UserController {
             
         });
     
+        if (!isValid) {
+            return false;
+        }
         return new User (user.name, user.gender, user.birth, user.country, user.email, user.password, user.photo, user.admin)    
         
 
