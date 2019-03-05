@@ -93,7 +93,8 @@ class UserController {
             
             } else if (field.name == "admin") {
 
-                (field.checked) ? user[field.name] = "admin" : user[field.name] = "";
+                user[field.name] = field.checked;
+                //verificando se o admin foi checked para atualizar na view
                                
             } else {
             
@@ -121,7 +122,7 @@ class UserController {
                             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
                             <td>${dataUser.name}</td>
                             <td>${dataUser.email}</td>
-                            <td>${dataUser.admin}</td>
+                            <td>${(dataUser.admin) ? "Admin" : "" }</td>
                             <td>${dataUser.birth}</td>
                             <td>
                                 <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
