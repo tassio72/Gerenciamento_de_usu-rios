@@ -13,6 +13,10 @@ class UserController {
         this.formEl.addEventListener("submit", event =>{ //evento ao submeter
 
             event.preventDefault();
+            
+            let btn = this.formEl.querySelector("[type=submit]"); //pegando o botão de salvar
+            
+            btn.disabled = true;
 
             var valuesUser = this.getValues();
 
@@ -21,6 +25,11 @@ class UserController {
                 valuesUser.photo = content;
                 //como addLine coloca HTML elemets, só podemos executa-la depois de carregar a foto, pois esta ta no meio da tamplate string
                 this.addLine(valuesUser); // pegando os dados do valuesUser - pelo metodos getValues - e chamando o addLine
+
+                this.formEl.reset(); //limpando todos os campos do formulário
+                this.formEl.elements[0].focus(); //dando focu ao nome
+               
+                btn.disabled = false;
 
             }), erro => {
                 console.error(erro);
@@ -123,7 +132,7 @@ class UserController {
                             <td>${dataUser.name}</td>
                             <td>${dataUser.email}</td>
                             <td>${(dataUser.admin) ? "Admin" : "" }</td>
-                            <td>${dataUser.birth}</td>
+                            <td>${Helpers.dateFormat(dataUser.register)}</td>
                             <td>
                                 <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
                                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
