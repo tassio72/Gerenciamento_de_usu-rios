@@ -16,45 +16,57 @@ class UserController {
 
             var valuesUser = this.getValues();
 
-            
-            this.getPhoto(content =>{
-                
+            this.getPhoto().then(content =>{
+   
                 valuesUser.photo = content;
                 //como addLine coloca HTML elemets, só podemos executa-la depois de carregar a foto, pois esta ta no meio da tamplate string
                 this.addLine(valuesUser); // pegando os dados do valuesUser - pelo metodos getValues - e chamando o addLine
-            
-            }); //get photo passa uma função como parametro, que tráz o conteúdo da imagem como return e passando para content
 
+            }), erro => {
+                console.error(erro);
+                alert("Erro no processamento da imagem, tente novamente");
+            };
             
         })
     
     } //onSubmit close
 
-    getPhoto (callback) { //get photo recebe uma função callback como parametro
+    getPhoto () { 
 
-        //FileReader é um API nativa do JS de leitura de arquivo
-        let fileReader = new FileReader();
+        return new Promise ((resolve, reject) => {
+            //FileReader é um API nativa do JS de leitura de arquivo
+            let fileReader = new FileReader();
 
-        let elements = [...this.formEl.elements].filter(item => { 
+            let elements = [...this.formEl.elements].filter(item => { 
+                
+                if (item.name === "photo") {
+                    return item;
+                };
             
-            if (item.name === "photo") {
-                return item;
-            };
-        
-        })//o filter vai pegar o array formado pelo spread e fazer um novo array com o critério passado na função
+            })//o filter vai pegar o array formado pelo spread e fazer um novo array com o critério passado na função
 
-        let file = elements[0].files[0];//pegando o arquivo dentro do novo array, no caso a foto
-        
-        //vamos usar um callback: uma função que é chamada depois que outra é finalizada
-        fileReader.onload = () => {
-            //importante lembrar que temos o tempo de carregamento do arquivo. Isso impacta nos métodos da class
-          
-            callback(fileReader.result); //vamos criar uma versão do arquivo em base64
+            let file = elements[0].files[0];//pegando o arquivo dentro do novo array, no caso a foto
+            
+            fileReader.onload = () => {
+                //importante lembrar que temos o tempo de carregamento do arquivo. Isso impacta nos métodos da class
+            
+                resolve(fileReader.result); //vamos criar uma versão do arquivo em base64
 
-        }; //onload faz o carregamento do arquivo
+            }; //onload faz o carregamento do arquivo
 
-        fileReader.readAsDataURL(file);
+            fileReader.onerror = erro => {
 
+                reject(erro);
+            }
+
+            if (file){
+                fileReader.readAsDataURL(file);
+            }else{
+                resolve("dist/img/boxed-bg.jpg"); //imagem padrão para quem não colocar imagem
+            } 
+            
+            //para caso o user não carregar uma foto
+        });
     }
 
     getValues () {
@@ -79,6 +91,10 @@ class UserController {
             
                 }
             
+            } else if (field.name == "admin") {
+
+                (field.checked) ? user[field.name] = "admin" : user[field.name] = "";
+                               
             } else {
             
                     user[field.name] = field.value;
@@ -98,8 +114,10 @@ class UserController {
 
     addLine (dataUser) {
 
-        this.tableEl.innerHTML = 
-                        `<tr>
+        let tr = document.createElement("tr");
+        
+        tr.innerHTML = 
+                        `
                             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
                             <td>${dataUser.name}</td>
                             <td>${dataUser.email}</td>
@@ -109,8 +127,8 @@ class UserController {
                                 <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
                                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
                             </td>
-                        </tr>`
-    
+                        `;
+        this.tableEl.appendChild(tr);
          
     }; //addLine close
 
