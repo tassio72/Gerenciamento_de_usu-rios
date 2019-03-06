@@ -1,8 +1,9 @@
 class UserController {
   
-    constructor(formId, tableId) {//como parametro recebemos os Id de form e tbody
+    constructor(formIdCreate, formIdUpdate, tableId) {//como parametro recebemos os Id de form e tbody
 
-        this.formEl = document.getElementById(formId);
+        this.formEl = document.getElementById(formIdCreate);
+        this.formUpdateEl = document.getElementById(formIdUpdate);
         this.tableEl = document.getElementById(tableId);
 
         this.onSubmit();
@@ -14,7 +15,46 @@ class UserController {
 
         document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e=>{
             this.showPanelCreate();
+
         })
+
+        this.formUpdateEl.addEventListener("click", event => {
+
+            event.preventDefault();
+
+            let btn = this.formUpdateEl.querySelector("[type=submit]"); //pegando o botão de atualizar
+            
+            btn.disabled = true; //bloqueando o botão pro usuário não ficar clicando várias vezes 
+
+            let valuesUser = this.getValues(this.formUpdateEl);
+
+            let index = this.formUpdateEl.dataset.trIndex; //pegadon o valor inserido na linha via sectionRowIndex, em addLine
+
+            let tr = this.tableEl.rows[index]; //a propriedade rows da table acessa a linha da tabela com o [index] informado
+
+            //lembre que as informações do user já estão dentro de uma variável do tipo dataset, dentro da tr. ENtão vamos precisar sobrescrever essas informações na tr, de acordo com a edição do usuário.
+            tr.dataset.user = JSON.stringify(valuesUser) ;
+                        
+            tr.innerHTML = 
+            `
+                <td><img src="${valuesUser.photo}" alt="User Image" class="img-circle img-sm"></td>
+                <td>${valuesUser.name}</td>
+                <td>${valuesUser.email}</td>
+                <td>${(valuesUser.admin) ? "Admin" : "" }</td>
+                <td>${Helpers.dateFormat(valuesUser.register)}</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+                    <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                </td>
+            `;
+
+            this.addEventsTr(tr);
+
+            this.updateCount();
+
+            btn.disabled = false; //reativando botão de atualizar 
+
+        });
 
     };//caso o user cancele o updateForm. Esse método já será invocado no construtor, para deixa-lo preparadp
 
@@ -30,7 +70,7 @@ class UserController {
             
             btn.disabled = true;
 
-            var valuesUser = this.getValues();
+            let valuesUser = this.getValues(this.formEl);
             if (!valuesUser) {
                 btn.disabled = false;
                 return false
@@ -94,7 +134,7 @@ class UserController {
         });
     }
 
-    getValues () {
+    getValues (formEl) {
 
         let user = {};
         /* o JSON é preenchido da seguinte forma JSON_Name = {nomeDoAtributo: "valor", n}
@@ -106,7 +146,7 @@ class UserController {
         let isValid = true; //para auxiliar na validação do formulário
 
         //elemets do formId são todos os elementos HTML. Como São elemetos do HTML, e estes não tem forEach, vamos usar o spread operator
-        [...this.formEl.elements].forEach((field, index) => {
+        [...formEl.elements].forEach((field, index) => {
     
             if (["name", "email", "password"].indexOf(field.name) > -1 && !field.value) { //validando os campos obrigatório
                 field.parentElement.classList.add("has-error"); //adicionando oo pai do elemento field, via parentElement, a class has-error
@@ -120,14 +160,14 @@ class UserController {
                     user[field.name] = field.value;
                     //pegando o valor marcado como checked pelo user e colocando no JSON. 
                     //Observe que para criar um novo atributo e atribuirmo um valor, seguimos o padrão JSON["NewAtributeName"] = value;
-            
+                    
                 }
             
             } else if (field.name == "admin") {
 
                 user[field.name] = field.checked;
                 //verificando se o admin foi checked para atualizar na view
-                               
+                                              
             } else {
             
                     user[field.name] = field.value;
@@ -168,10 +208,30 @@ class UserController {
                             </td>
                         `;
 
+        
+        this.addEventsTr(tr);
+
+        this.tableEl.appendChild(tr);
+
+        this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
+         
+    }; //addLine close
+
+    addEventsTr(tr) {
+
+        
         tr.querySelector(".btn-edit").addEventListener("click", editar => { //para que o user consigar editar, adicionamos a class btn-edit no botão de cada linha
            
             let json = JSON.parse(tr.dataset.user); //vamos guardar as informações preenchidas pelo user dentro da própria tr, usando a variável user como referencia
             let form =document.querySelector("#form-user-update");
+
+            /*Por se tratar de uma edição dde dados já cadastrados, 
+            precisamos criar uma referencia que mais tarde será usada para substituir os valores da linha certa da tabela.
+            Vamos colocar este valor usando o dataset.
+            a propriedade sectionRowIndex retorna o valor da linha da tabela, começando de zero. Então linha 1 = 0, linha 2 = 1...
+             */
+            form.dataset.trIndex = tr.sectionRowIndex; //vamos salvar o número da linha dentro da variável trIndex (do tipo dataset)
+
             
             for (let nomeCampo in json) { //vamos fazer um for in, para percorrer cada elemento dentro do objeto json e salvar dentro da variável nameCampo (a variável muda de valor a cada laço, ou seja nameCampo não é um array)
 
@@ -196,7 +256,8 @@ class UserController {
 
                         case "checkbox": //para o admin, que pode ser cheked or not checked
                             field.checked = json[nomeCampo];
-                        break;
+                        
+                            break;
 
                         default:
                         field.value = json[nomeCampo]; //o json devolve o valor deontro da posição [nomeCampo], é como se fosse um index, usando o próprio nome do elemento                   
@@ -210,12 +271,10 @@ class UserController {
             
             this.showPanelUpdate();
            
-        });                
-        this.tableEl.appendChild(tr);
+        });
 
-        this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
-         
-    }; //addLine close
+    };
+
 
 
     showPanelCreate (){
