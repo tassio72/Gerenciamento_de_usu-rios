@@ -184,9 +184,25 @@ class UserController {
             
                 if (field) { //vamos lembrar que dentro do json, temos o atributo register, mas não há nenhum campo no form com este nome, então precisamos validar se o nomeCampo existe no form
                     
-                    if (field.type == "file") continue //como temos o campo da foto, vamos dá um continue para o type == file, para ele ir pro próximo nomeCampo pois a foto não retorna um value.
+                    switch (field.type) {
+                        case "file": //como temos o campo da foto, vamos dá um continue para o type == file, para ele ir pro próximo nomeCampo pois a foto não retorna um value.
+                        continue;
+                        break;
 
-                    field.value = json[nomeCampo]; //o json devolve o valor deontro da posição [nomeCampo], é como se fosse um index, usando o próprio nome do elemento
+                        case "radio":
+                        field = form.querySelector("[name=" + nomeCampo.replace("_", "") + "][value=" + json[nomeCampo] + "]"); //como as duas opções do radio tem o mesmo nomeCampo (gender), precisamos colocar outro filtro para o seletor saber quem foi selecionado, no caso usamos o [value]
+                        field.checked = true;
+                        break;
+
+                        case "checkbox": //para o admin, que pode ser cheked or not checked
+                            field.checked = json[nomeCampo];
+                        break;
+
+                        default:
+                        field.value = json[nomeCampo]; //o json devolve o valor deontro da posição [nomeCampo], é como se fosse um index, usando o próprio nome do elemento                   
+
+                    }  
+
                 }    
             }
             
@@ -230,7 +246,7 @@ class UserController {
             let user = JSON.parse(tr.dataset.user);
 
             if (user._admin) numberAdmin++; //esse _admin que chamamos é do JSON
-            console.log(user);
+            
         });
 
 
