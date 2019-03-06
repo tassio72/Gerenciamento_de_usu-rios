@@ -6,7 +6,19 @@ class UserController {
         this.tableEl = document.getElementById(tableId);
 
         this.onSubmit();
+
+        this.onEdit();
     }
+
+    onEdit() {
+
+        document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e=>{
+            this.showPanelCreate();
+        })
+
+    };//caso o user cancele o updateForm. Esse método já será invocado no construtor, para deixa-lo preparadp
+
+
 
     onSubmit(){
 
@@ -151,15 +163,60 @@ class UserController {
                             <td>${(dataUser.admin) ? "Admin" : "" }</td>
                             <td>${Helpers.dateFormat(dataUser.register)}</td>
                             <td>
-                                <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+                                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
                                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
                             </td>
                         `;
+
+        tr.querySelector(".btn-edit").addEventListener("click", editar => { //para que o user consigar editar, adicionamos a class btn-edit no botão de cada linha
+           
+            let json = JSON.parse(tr.dataset.user); //vamos guardar as informações preenchidas pelo user dentro da própria tr, usando a variável user como referencia
+            let form =document.querySelector("#form-user-update");
+            
+            for (let nomeCampo in json) { //vamos fazer um for in, para percorrer cada elemento dentro do objeto json e salvar dentro da variável nameCampo (a variável muda de valor a cada laço, ou seja nameCampo não é um array)
+
+                /*agora vamos usar o valor do momento da variável nomeCampo como referencia para pesquisar dentro do form,
+                 qual elemento HTML possui o [name = nomeCampo].
+                 Lembranado que como nomeCampo vem do JSON, o atributo do JSON vai retornar com o anderline (_name, _gender...),
+                 por isso precisamos fazer o raplace, pois no [name] do HTML, deste form, está sem o anderline.
+                 */
+                let field = form.querySelector("[name=" + nomeCampo.replace("_", "") + "]"); //fazendo a pesquisa e trocando "_" por ""
+            
+                if (field) { //vamos lembrar que dentro do json, temos o atributo register, mas não há nenhum campo no form com este nome, então precisamos validar se o nomeCampo existe no form
+                    
+                    if (field.type == "file") continue //como temos o campo da foto, vamos dá um continue para o type == file, para ele ir pro próximo nomeCampo pois a foto não retorna um value.
+
+                    field.value = json[nomeCampo]; //o json devolve o valor deontro da posição [nomeCampo], é como se fosse um index, usando o próprio nome do elemento
+                }    
+            }
+            
+            
+            
+            this.showPanelUpdate();
+           
+        });                
         this.tableEl.appendChild(tr);
 
         this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
          
     }; //addLine close
+
+
+    showPanelCreate (){
+
+        document.querySelector("#box-user-create").style.display = "block";
+        document.querySelector("#box-user-update").style.display = "none";
+
+
+    }//para mostrar o createForm e esconder o UpdateForm
+
+    showPanelUpdate (){
+
+        document.querySelector("#box-user-create").style.display = "none";
+        document.querySelector("#box-user-update").style.display = "block";
+
+    }//para mostrar o updateForm e esconder o createForm
+
 
     updateCount() {
 
