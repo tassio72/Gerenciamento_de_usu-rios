@@ -19,6 +19,10 @@ class UserController {
             btn.disabled = true;
 
             var valuesUser = this.getValues();
+            if (!valuesUser) {
+                btn.disabled = false;
+                return false
+            } 
 
             this.getPhoto().then(content =>{
    
@@ -97,7 +101,6 @@ class UserController {
                 isValid = false;
             }
 
-
             if (field.name == "gender") {//para a perguntado tipo radio, pegaremos apenas o que for selecionado (checked) pelo usuário
             
                 if (field.checked) { //checked é uma propriedade
@@ -136,7 +139,10 @@ class UserController {
     addLine (dataUser) {
 
         let tr = document.createElement("tr");
-        
+
+        //dataset coloca informações direto no HTML em string pura, que mais tarde podem ser recuperadas. Aqui, vamos colocar os dados recebidos do Objeto dentro da variavel dataset, no caso "user"
+        tr.dataset.user = JSON.stringify(dataUser); //por salvar como string pura, vamos usar o JSON para preservar as propriedades do Objeto, MAS COM ISSO PERDEMO A ISTANCIA DO OBJETO
+        //fonte.dataset.variavelQueReceberáDados
         tr.innerHTML = 
                         `
                             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
@@ -150,8 +156,32 @@ class UserController {
                             </td>
                         `;
         this.tableEl.appendChild(tr);
+
+        this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
          
     }; //addLine close
+
+    updateCount() {
+
+        let numberUsers = 0;
+        let numberAdmin = 0;
+
+        [...this.tableEl.children].forEach(tr=>{ //o atributo children pega os filhos do elemento, no caso as trs do tbody(que chamamos de tableEl)
+
+            numberUsers++;
+
+            let user = JSON.parse(tr.dataset.user);
+
+            if (user._admin) numberAdmin++; //esse _admin que chamamos é do JSON
+            console.log(user);
+        });
+
+
+        document.querySelector("#number-users").innerHTML = numberUsers; //atualizando na view
+        document.querySelector("#number-users-admin").innerHTML = numberAdmin; //atualizando na view
+
+
+    }
 
 
 }
