@@ -140,9 +140,9 @@ class UserController {
 
         let tr = document.createElement("tr");
 
-        //dataset coloca informações direto no HTML em string pura, que mais tarde podem ser recuperadas. Aqui, vamos colocar os dados recebidos do Objeto dentro da variavel dataset, no caso "user"
+        //dataset coloca informações direto no HTML em string pura, que mais tarde podem ser recuperadas. Aqui, vamos colocar os dados recebidos do Objeto dentro da variavel dataset, no caso "user". Depois de rodar, inspecione no navegador, tbody formada e veja que os dados do objeto estão lá
         tr.dataset.user = JSON.stringify(dataUser); //por salvar como string pura, vamos usar o JSON para preservar as propriedades do Objeto, MAS COM ISSO PERDEMO A ISTANCIA DO OBJETO
-        //fonte.dataset.variavelQueReceberáDados
+        //fonte.dataset.variavelQueReceberáDados, logo na linha a cima criamos uma variável (user) que terá uma identificação no HTML como "data-user"
         tr.innerHTML = 
                         `
                             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
