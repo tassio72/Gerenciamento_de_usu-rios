@@ -243,7 +243,7 @@ class UserController {
                             <td>${Helpers.dateFormat(dataUser.register)}</td>
                             <td>
                                 <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                                <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
                             </td>
                         `;
 
@@ -257,6 +257,17 @@ class UserController {
     }; //addLine close
 
     addEventsTr(tr) {
+       
+        tr.querySelector(".btn-delete").addEventListener("click", del => {
+
+            if (confirm("Deseja realmente excluir essas informações?")) {
+
+                tr.remove();
+
+                this.updateCount();
+
+            } //função confirm abre um popup no navegador com opçoes "ok" e "cancelar", se clicar em ok, ou seja for = true ele executa o código
+        });
 
         
         tr.querySelector(".btn-edit").addEventListener("click", editar => { //para que o user consigar editar, adicionamos a class btn-edit no botão de cada linha
