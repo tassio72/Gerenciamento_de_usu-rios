@@ -9,6 +9,8 @@ class UserController {
         this.onSubmit();
 
         this.onEdit();
+
+        this.showPanelCreate ();
     }
 
     onEdit() {
@@ -18,7 +20,7 @@ class UserController {
 
         })
 
-        this.formUpdateEl.addEventListener("click", event => {
+        this.formUpdateEl.addEventListener("submit", event => {
 
             event.preventDefault();
 
@@ -71,6 +73,7 @@ class UserController {
             btn.disabled = true;
 
             let valuesUser = this.getValues(this.formEl);
+            
             if (!valuesUser) {
                 btn.disabled = false;
                 return false
@@ -234,7 +237,7 @@ class UserController {
 
             
             for (let nomeCampo in json) { //vamos fazer um for in, para percorrer cada elemento dentro do objeto json e salvar dentro da variável nameCampo (a variável muda de valor a cada laço, ou seja nameCampo não é um array)
-
+                console.log(nomeCampo);
                 /*agora vamos usar o valor do momento da variável nomeCampo como referencia para pesquisar dentro do form,
                  qual elemento HTML possui o [name = nomeCampo].
                  Lembranado que como nomeCampo vem do JSON, o atributo do JSON vai retornar com o anderline (_name, _gender...),
@@ -247,8 +250,7 @@ class UserController {
                     switch (field.type) {
                         case "file": //como temos o campo da foto, vamos dá um continue para o type == file, para ele ir pro próximo nomeCampo pois a foto não retorna um value.
                         continue;
-                        break;
-
+                        
                         case "radio":
                         field = form.querySelector("[name=" + nomeCampo.replace("_", "") + "][value=" + json[nomeCampo] + "]"); //como as duas opções do radio tem o mesmo nomeCampo (gender), precisamos colocar outro filtro para o seletor saber quem foi selecionado, no caso usamos o [value]
                         field.checked = true;
