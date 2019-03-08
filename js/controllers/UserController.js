@@ -73,7 +73,7 @@ class UserController {
             btn.disabled = true;
 
             let valuesUser = this.getValues(this.formEl);
-            
+
             if (!valuesUser) {
                 btn.disabled = false;
                 return false
@@ -130,7 +130,7 @@ class UserController {
             if (file){
                 fileReader.readAsDataURL(file);
             }else{
-                resolve("dist/img/boxed-bg.jpg"); //imagem padrão para quem não colocar imagem
+                resolve("dist/img/avatar04.png"); //imagem padrão para quem não colocar imagem
             } 
             
             //para caso o user não carregar uma foto
