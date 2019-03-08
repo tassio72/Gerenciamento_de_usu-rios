@@ -28,33 +28,69 @@ class UserController {
             
             btn.disabled = true; //bloqueando o botão pro usuário não ficar clicando várias vezes 
 
-            let valuesUser = this.getValues(this.formUpdateEl);
+            let valuesUser = this.getValues(this.formUpdateEl);//obtendo valores pelo getValues
 
-            let index = this.formUpdateEl.dataset.trIndex; //pegadon o valor inserido na linha via sectionRowIndex, em addLine
+            let index = this.formUpdateEl.dataset.trIndex; //pegando o valor inserido na linha via sectionRowIndex, em addEventsTr
 
-            let tr = this.tableEl.rows[index]; //a propriedade rows da table acessa a linha da tabela com o [index] informado
+            let tr = this.tableEl.rows[index]; //a propriedade rows da table acessa a linha da tabela principal, declarada no construtor, com o [index] informado
 
-            //lembre que as informações do user já estão dentro de uma variável do tipo dataset, dentro da tr. ENtão vamos precisar sobrescrever essas informações na tr, de acordo com a edição do usuário.
-            tr.dataset.user = JSON.stringify(valuesUser) ;
-                        
-            tr.innerHTML = 
-            `
-                <td><img src="${valuesUser.photo}" alt="User Image" class="img-circle img-sm"></td>
-                <td>${valuesUser.name}</td>
-                <td>${valuesUser.email}</td>
-                <td>${(valuesUser.admin) ? "Admin" : "" }</td>
-                <td>${Helpers.dateFormat(valuesUser.register)}</td>
-                <td>
-                    <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                    <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-                </td>
-            `;
+            let userOld = JSON.parse(tr.dataset.user); //vamos salvar os dados atuais da tr dentro de uma variável , mas garantindo o formato JSON para não perdermos a caracteristica de objeto
 
-            this.addEventsTr(tr);
+            /* E se o usuário não colocar uma foto nova ao atualizar?
+            Bem, como fazemos um novo tr.innerHTML na mesma tr, os valores antigos serão substituidos, 
+            então precisamos, primeiro, salvar a foto atual em algum lugar para garantir que, caso o usuário não trocar de foto, a antiga será mantida.
+            
+            Então, vamos deixar sabido:
+            UserOld tem os valores que estão na tr da tabela principal, neste momento (ou seja, valores antigos);
+            valuesUser tem os valores atuais do formUpdate from carregados da tr da qual foi escutado o evento clique 
+            */
+          
+            let result = Object.assign({}, userOld, valuesUser); 
+            /*vamos usar o método assign para substituir o valores atuais do formUpdate (que estão em valuesUser)
+            na tr da tabela principal (userOld). O {} do assign é a nova variável gerada a partir da substituição dos valores de valuesUser em userOld
+            */   
 
-            this.updateCount();
+            //vamos validar a foto. Carrega uma nova, caso o usuário troque ou carregar a antiga
+            this.getPhoto(this.formUpdateEl).then(content =>{
 
-            btn.disabled = false; //reativando botão de atualizar 
+                if(!valuesUser.photo) { 
+                    result._photo = userOld._photo; //se a foto estiver vazia, ou seja, não for alterada...
+                } else {
+                    result._photo = content; //caso o usuário carregar uma nova foto, esta estará em versão base64 dentro de content (vide getPhotos())
+                };
+
+                //lembre que as informações do user já estão dentro de uma variável do tipo dataset. ENtão vamos precisar sobrescrever essas informações na tr, de acordo com a edição do usuário.
+                tr.dataset.user = JSON.stringify(result);//alterando os valores do dataset user         
+
+
+                tr.innerHTML = 
+                        `
+                        <td><img src="${result._photo}" alt="User Image" class="img-circle img-sm"></td>
+                        <td>${result._name}</td>
+                        <td>${result._email}</td>
+                        <td>${(result._admin) ? "Admin" : "" }</td>
+                        <td>${Helpers.dateFormat(result._register)}</td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+                            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                        </td>`
+                ;
+
+                this.addEventsTr(tr); //adicionando o evento de editar no novo botão criado a cima
+
+                this.updateCount();   
+               
+                this.formUpdateEl.reset(); //limpando todos os campos do formulário
+                this.formEl.elements[0].focus(); //dando focu ao nome
+               
+                btn.disabled = false;
+
+                this.showPanelCreate();
+
+            }), erro => {
+                console.error(erro);
+                alert("Erro no processamento da imagem, tente novamente");
+            };
 
         });
 
@@ -79,7 +115,7 @@ class UserController {
                 return false
             } 
 
-            this.getPhoto().then(content =>{
+            this.getPhoto(this.formEl).then(content =>{
    
                 valuesUser.photo = content;
                 //como addLine coloca HTML elemets, só podemos executa-la depois de carregar a foto, pois esta ta no meio da tamplate string
@@ -99,13 +135,13 @@ class UserController {
     
     } //onSubmit close
 
-    getPhoto () { 
+    getPhoto (form) { 
 
         return new Promise ((resolve, reject) => {
             //FileReader é um API nativa do JS de leitura de arquivo
             let fileReader = new FileReader();
 
-            let elements = [...this.formEl.elements].filter(item => { 
+            let elements = [...form.elements].filter(item => { 
                 
                 if (item.name === "photo") {
                     return item;
@@ -137,7 +173,7 @@ class UserController {
         });
     }
 
-    getValues (formEl) {
+    getValues (form) {
 
         let user = {};
         /* o JSON é preenchido da seguinte forma JSON_Name = {nomeDoAtributo: "valor", n}
@@ -149,7 +185,7 @@ class UserController {
         let isValid = true; //para auxiliar na validação do formulário
 
         //elemets do formId são todos os elementos HTML. Como São elemetos do HTML, e estes não tem forEach, vamos usar o spread operator
-        [...formEl.elements].forEach((field, index) => {
+        [...form.elements].forEach((field, index) => {
     
             if (["name", "email", "password"].indexOf(field.name) > -1 && !field.value) { //validando os campos obrigatório
                 field.parentElement.classList.add("has-error"); //adicionando oo pai do elemento field, via parentElement, a class has-error
@@ -226,24 +262,23 @@ class UserController {
         tr.querySelector(".btn-edit").addEventListener("click", editar => { //para que o user consigar editar, adicionamos a class btn-edit no botão de cada linha
            
             let json = JSON.parse(tr.dataset.user); //vamos guardar as informações preenchidas pelo user dentro da própria tr, usando a variável user como referencia
-            let form =document.querySelector("#form-user-update");
 
             /*Por se tratar de uma edição dde dados já cadastrados, 
             precisamos criar uma referencia que mais tarde será usada para substituir os valores da linha certa da tabela.
             Vamos colocar este valor usando o dataset.
             a propriedade sectionRowIndex retorna o valor da linha da tabela, começando de zero. Então linha 1 = 0, linha 2 = 1...
              */
-            form.dataset.trIndex = tr.sectionRowIndex; //vamos salvar o número da linha dentro da variável trIndex (do tipo dataset)
+            this.formUpdateEl.dataset.trIndex = tr.sectionRowIndex; //vamos salvar o número da linha dentro da variável trIndex (do tipo dataset)
 
             
             for (let nomeCampo in json) { //vamos fazer um for in, para percorrer cada elemento dentro do objeto json e salvar dentro da variável nameCampo (a variável muda de valor a cada laço, ou seja nameCampo não é um array)
-                console.log(nomeCampo);
+                
                 /*agora vamos usar o valor do momento da variável nomeCampo como referencia para pesquisar dentro do form,
                  qual elemento HTML possui o [name = nomeCampo].
                  Lembranado que como nomeCampo vem do JSON, o atributo do JSON vai retornar com o anderline (_name, _gender...),
                  por isso precisamos fazer o raplace, pois no [name] do HTML, deste form, está sem o anderline.
                  */
-                let field = form.querySelector("[name=" + nomeCampo.replace("_", "") + "]"); //fazendo a pesquisa e trocando "_" por ""
+                let field = this.formUpdateEl.querySelector("[name=" + nomeCampo.replace("_", "") + "]"); //fazendo a pesquisa e trocando "_" por ""
             
                 if (field) { //vamos lembrar que dentro do json, temos o atributo register, mas não há nenhum campo no form com este nome, então precisamos validar se o nomeCampo existe no form
                     
@@ -252,7 +287,7 @@ class UserController {
                         continue;
                         
                         case "radio":
-                        field = form.querySelector("[name=" + nomeCampo.replace("_", "") + "][value=" + json[nomeCampo] + "]"); //como as duas opções do radio tem o mesmo nomeCampo (gender), precisamos colocar outro filtro para o seletor saber quem foi selecionado, no caso usamos o [value]
+                        field = this.formUpdateEl.querySelector("[name=" + nomeCampo.replace("_", "") + "][value=" + json[nomeCampo] + "]"); //como as duas opções do radio tem o mesmo nomeCampo (gender), precisamos colocar outro filtro para o seletor saber quem foi selecionado, no caso usamos o [value]
                         field.checked = true;
                         break;
 
@@ -269,7 +304,7 @@ class UserController {
                 }    
             }
             
-            
+            this.formUpdateEl.querySelector(".photo").src = json._photo; //o carregamento da foto é um caso a parte. Vamos pegar a imagem atual e deixa-la no formUpdate, para usuário poder vê-la
             
             this.showPanelUpdate();
            
