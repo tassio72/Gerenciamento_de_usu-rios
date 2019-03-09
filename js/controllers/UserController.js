@@ -10,6 +10,8 @@ class UserController {
 
         this.onEdit();
 
+        this.selectAll();
+
         this.showPanelCreate ();
     }
 
@@ -72,7 +74,7 @@ class UserController {
                         <td>${Helpers.dateFormat(result._register)}</td>
                         <td>
                             <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                            <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
                         </td>`
                 ;
 
@@ -118,6 +120,9 @@ class UserController {
             this.getPhoto(this.formEl).then(content =>{
    
                 valuesUser.photo = content;
+               
+                this.insert(valuesUser);//colocando os dados na sessionStorage
+               
                 //como addLine coloca HTML elemets, só podemos executa-la depois de carregar a foto, pois esta ta no meio da tamplate string
                 this.addLine(valuesUser); // pegando os dados do valuesUser - pelo metodos getValues - e chamando o addLine
 
@@ -225,11 +230,76 @@ class UserController {
     }//getValues close
 
 
+    getUsersStorage() { //obtendo os dados da Storage
+
+        
+        /*Vamos inserir os dados dentro da sessionStorage 
+
+        vamos usar o método da sessionStorage: setItem("NomeDaChave", "ValorDaChave");
+        chave intenda como referência/index/nome que serve para acessarmos o value. Lembrando que este método retorna uma STRING
+        
+        
+        como recebemos os dados em formato JSON, se tentarmos colocar o JSON.Stringfy direto, como segundo parametro. 
+        O storage vais receber uma string normal e vamos perder as informações do Object. Por isso precisamos passas os dados para uma Array, salva dados por dado e depois passar para o storage via JSON
+        */
+
+       let users = [];
+
+       if (sessionStorage.getItem("users")) { //caso já tenha informações na minha storage, vamos preservar essas informações colocando-as primeiro no array
+
+           users = JSON.parse(sessionStorage.getItem("users")); //vamos colocar no array, os valores storage, preservando o objeto via JSON...lembrando que sessionStorage.getItem retorna uma string
+                                                               //parse = interpretação
+       }
+
+       return users;
+    }
+
+
+    selectAll() { //método para listass as informações do Session Storage na view
+
+        let users = this.getUsersStorage();
+
+        users.forEach(dataUser => {
+            /* Como vamos passar os dados para view, vamos ter que criar uma tr no tbody da table,
+            mas no método addLine() passamos os dados como um Objeto User, diferente daqui que temos um JSON (com _)
+            Pra contornar esse problemas vamos ter que instancia um User e usar seu método*/
+
+            let user = new User(); 
+
+            user.loadFromJSON(dataUser); //carregando do JSON e colocando na instância
+
+            this.addLine(user);
+
+
+        });
+
+    }
+
+    insert(data){
+        /*Vamos inserir os dados dentro da sessionStorage 
+
+        vamos usar o método da sessionStorage: setItem("NomeDaChave", "ValorDaChave");
+        chave intenda como referência/index/nome que serve para acessarmos o value. Lembrando que este método retorna uma STRING
+        
+        
+        como recebemos os dados em formato JSON, se tentarmos colocar o JSON.Stringfy direto, como segundo parametro. 
+        O storage vais receber uma string normal e vamos perder as informações do Object. Por isso precisamos passas os dados para uma Array, salva dados por dado e depois passar para o storage via JSON
+        */
+
+        let users = this.getUsersStorage();
+
+        users.push(data); //colocando o JSON no array, adicionando os dados que ainda não estão
+
+        sessionStorage.setItem("users", JSON.stringify(users));
+
+    }
+
 
 
     addLine (dataUser) {
 
         let tr = document.createElement("tr");
+
 
         //dataset coloca informações direto no HTML em string pura, que mais tarde podem ser recuperadas. Aqui, vamos colocar os dados recebidos do Objeto dentro da variavel dataset, no caso "user". Depois de rodar, inspecione no navegador, tbody formada e veja que os dados do objeto estão lá
         tr.dataset.user = JSON.stringify(dataUser); //por salvar como string pura, vamos usar o JSON para preservar as propriedades do Objeto, MAS COM ISSO PERDEMO A ISTANCIA DO OBJETO
