@@ -246,9 +246,9 @@ class UserController {
        let users = [];
 
        if (sessionStorage.getItem("users")) { //caso já tenha informações na minha storage, vamos preservar essas informações colocando-as primeiro no array
-
+        //localStorage.getItem("users")
            users = JSON.parse(sessionStorage.getItem("users")); //vamos colocar no array, os valores storage, preservando o objeto via JSON...lembrando que sessionStorage.getItem retorna uma string
-                                                               //parse = interpretação
+                             //localStorage.getItem("users")           //parse = interpretação
        }
 
        return users;
@@ -291,6 +291,8 @@ class UserController {
         users.push(data); //colocando o JSON no array, adicionando os dados que ainda não estão
 
         sessionStorage.setItem("users", JSON.stringify(users));
+        //localStorage.setItem("users", JSON.stringify(users)); //para colocar no localStorage
+        
 
     }
 
