@@ -5,6 +5,6 @@ let gender = document.querySelectorAll("#form-user-create [name = gender]:checke
 //no caso, temos as opções masculino e feminino, mas queremos o que o user checked, então colocamos checked como parametro. 
 */
 
-let userController = new UserController("form-user-create", "form-user-update", "table-user");
 
+let userController = new UserController("form-user-create", "form-user-update", "table-user");
 

@@ -61,24 +61,20 @@ class UserController {
                     result._photo = content; //caso o usuário carregar uma nova foto, esta estará em versão base64 dentro de content (vide getPhotos())
                 };
 
-                //lembre que as informações do user já estão dentro de uma variável do tipo dataset. ENtão vamos precisar sobrescrever essas informações na tr, de acordo com a edição do usuário.
-                tr.dataset.user = JSON.stringify(result);//alterando os valores do dataset user         
+                /*Temos o método getTr, que tem o tamplate da tr da tabela.
+                Então vamos atualizar a tr já existente. 
 
+                O nosso template recebe um objeto do tipo User, então primeiro precisamos intânciar uma referencia de User
+                e depois converter o JSON (com os dados atualizados) em object , pelo método loadFromJSON
+                 */
 
-                tr.innerHTML = 
-                        `
-                        <td><img src="${result._photo}" alt="User Image" class="img-circle img-sm"></td>
-                        <td>${result._name}</td>
-                        <td>${result._email}</td>
-                        <td>${(result._admin) ? "Admin" : "" }</td>
-                        <td>${Helpers.dateFormat(result._register)}</td>
-                        <td>
-                            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                            <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
-                        </td>`
-                ;
+                let user = new User();
+                
+                user.loadFromJSON(result);
+                
+                user.save();
 
-                this.addEventsTr(tr); //adicionando o evento de editar no novo botão criado a cima
+                this.getTr(user, tr); 
 
                 this.updateCount();   
                
@@ -121,7 +117,7 @@ class UserController {
    
                 valuesUser.photo = content;
                
-                this.insert(valuesUser);//colocando os dados na sessionStorage
+                valuesUser.save();//colocando os dados na sessionStorage
                
                 //como addLine coloca HTML elemets, só podemos executa-la depois de carregar a foto, pois esta ta no meio da tamplate string
                 this.addLine(valuesUser); // pegando os dados do valuesUser - pelo metodos getValues - e chamando o addLine
@@ -229,35 +225,9 @@ class UserController {
 
     }//getValues close
 
-
-    getUsersStorage() { //obtendo os dados da Storage
-
-        
-        /*Vamos inserir os dados dentro da sessionStorage 
-
-        vamos usar o método da sessionStorage: setItem("NomeDaChave", "ValorDaChave");
-        chave intenda como referência/index/nome que serve para acessarmos o value. Lembrando que este método retorna uma STRING
-        
-        
-        como recebemos os dados em formato JSON, se tentarmos colocar o JSON.Stringfy direto, como segundo parametro. 
-        O storage vais receber uma string normal e vamos perder as informações do Object. Por isso precisamos passas os dados para uma Array, salva dados por dado e depois passar para o storage via JSON
-        */
-
-       let users = [];
-
-       if (sessionStorage.getItem("users")) { //caso já tenha informações na minha storage, vamos preservar essas informações colocando-as primeiro no array
-        //localStorage.getItem("users")
-           users = JSON.parse(sessionStorage.getItem("users")); //vamos colocar no array, os valores storage, preservando o objeto via JSON...lembrando que sessionStorage.getItem retorna uma string
-                             //localStorage.getItem("users")           //parse = interpretação
-       }
-
-       return users;
-    }
-
-
     selectAll() { //método para listass as informações do Session Storage na view
 
-        let users = this.getUsersStorage();
+        let users = User.getUsersStorage();
 
         users.forEach(dataUser => {
             /* Como vamos passar os dados para view, vamos ter que criar uma tr no tbody da table,
@@ -275,37 +245,28 @@ class UserController {
 
     }
 
-    insert(data){
-        /*Vamos inserir os dados dentro da sessionStorage 
-
-        vamos usar o método da sessionStorage: setItem("NomeDaChave", "ValorDaChave");
-        chave intenda como referência/index/nome que serve para acessarmos o value. Lembrando que este método retorna uma STRING
-        
-        
-        como recebemos os dados em formato JSON, se tentarmos colocar o JSON.Stringfy direto, como segundo parametro. 
-        O storage vais receber uma string normal e vamos perder as informações do Object. Por isso precisamos passas os dados para uma Array, salva dados por dado e depois passar para o storage via JSON
-        */
-
-        let users = this.getUsersStorage();
-
-        users.push(data); //colocando o JSON no array, adicionando os dados que ainda não estão
-
-        sessionStorage.setItem("users", JSON.stringify(users));
-        //localStorage.setItem("users", JSON.stringify(users)); //para colocar no localStorage
-        
-
-    }
-
-
-
     addLine (dataUser) {
 
-        let tr = document.createElement("tr");
-
-
+        let tr = this.getTr(dataUser);
+        
+        this.tableEl.appendChild(tr);
+        
+        this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
+        
+    }; //addLine close
+    
+    getTr(dataUser, tr = null) { //paara usar o innetHTML
+        
+        /*Quando criamos um user, criamos um tr nova, mas quando editamos um usuário, editamos uma tr existente.
+        Vamos colocar um if para validar se a tr está null ou não
+        Lembrando que a tr passada na função é opcional
+        */    
+       if (tr ===null) tr = document.createElement("tr"); 
+       
         //dataset coloca informações direto no HTML em string pura, que mais tarde podem ser recuperadas. Aqui, vamos colocar os dados recebidos do Objeto dentro da variavel dataset, no caso "user". Depois de rodar, inspecione no navegador, tbody formada e veja que os dados do objeto estão lá
         tr.dataset.user = JSON.stringify(dataUser); //por salvar como string pura, vamos usar o JSON para preservar as propriedades do Objeto, MAS COM ISSO PERDEMO A ISTANCIA DO OBJETO
         //fonte.dataset.variavelQueReceberáDados, logo na linha a cima criamos uma variável (user) que terá uma identificação no HTML como "data-user"
+
         tr.innerHTML = 
                         `
                             <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
@@ -318,21 +279,25 @@ class UserController {
                                 <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
                             </td>
                         `;
-
+    
         
         this.addEventsTr(tr);
 
-        this.tableEl.appendChild(tr);
-
-        this.updateCount(); //atualiza quantos usuários cadastrados e quando admins
-         
-    }; //addLine close
+        return tr;
+        
+    } //getTr close
 
     addEventsTr(tr) {
        
         tr.querySelector(".btn-delete").addEventListener("click", del => {
 
             if (confirm("Deseja realmente excluir essas informações?")) {
+
+                let user = new User();
+
+                user.loadFromJSON(JSON.parse(tr.dataset.user));
+
+                user.remove();
 
                 tr.remove();
 
