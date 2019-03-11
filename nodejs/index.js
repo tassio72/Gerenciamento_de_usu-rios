@@ -5,11 +5,13 @@
 const express = require("express"); //o express já trás o http internamente
 const consign = require("consign");//fazendo inclusão do consign
 const bodyparser = require("body-parser");//fazendo inclusão bady-parser para que o express entenda o post
+const expressValidator = require("express-validator");
 
 let app = express();
 
 app.use(bodyparser.urlencoded ({ extended: false}));
 app.use(bodyparser.json()); //para ficar mais facil de trabalhar, camos converter os dados em json
+app.use(expressValidator());
 
 consign().include("routes").include("helpers").into(app); //usando o consig para incluir as rotas na variável app. Repare que ele pega a pasta routes com tud que tem dentro
 
