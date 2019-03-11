@@ -11,7 +11,7 @@ let app = express();
 app.use(bodyparser.urlencoded ({ extended: false}));
 app.use(bodyparser.json()); //para ficar mais facil de trabalhar, camos converter os dados em json
 
-consign().include("routes").into(app); //usando o consig para incluir as rotas na variável app. Repare que ele pega a pasta routes com tud que tem dentro
+consign().include("routes").include("helpers").into(app); //usando o consig para incluir as rotas na variável app. Repare que ele pega a pasta routes com tud que tem dentro
 
 /*
 Precisamos informar ao servidor qual a porta que ele ficará escutando os request
