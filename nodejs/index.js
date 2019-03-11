@@ -3,14 +3,11 @@
 //importante: o comando crtl + c interrompe o servidor. Isso é importante porque qulquer alteração no code, para ser subida ao servidor, antes este deve ser interronpido.
 
 const express = require("express"); //o express já trás o http internamente
+const consign = require("consign");//fazendo inclusão do consign
 
-let routesIndex = require("./routes/index");
-let routesUsers = require("./routes/users");
+let app = express();
 
-let app = express()
-
-app.use(routesIndex);
-app.use("/users", routesUsers); //o parametro "/users" é a rota padrão desse requiremento
+consign().include("routes").into(app); //usando o consig para incluir as rotas na variável app. Repare que ele pega a pasta routes com tud que tem dentro
 
 /*
 Precisamos informar ao servidor qual a porta que ele ficará escutando os request
