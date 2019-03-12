@@ -1,5 +1,5 @@
-let NeDB = require("nedb");
-let db = new NeDB ({
+let NeDB = require("nedb"); //requerindo o NeDB (banco de dados)
+let db = new NeDB ({ 
     filename: "users.db",
     autoload: true
 })
